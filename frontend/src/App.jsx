@@ -1,8 +1,11 @@
 import { useState } from 'react'
+import { drawNetwork } from './network'
 import heroImg from './assets/hero.png'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import './App.css'
+
+const API_BASE = "http://127.0.0.1:5001";
 
 function App() {
   const [count, setCount] = useState(0)
