@@ -181,4 +181,20 @@
     right: 0;
     border-right-color: var(--border);
   }
+
 }
+
+.network {width: 100%; height: 80vh; display: block; border: 1px solid #ddd;}
+.tooltip {
+  position: fixed;
+  display:  none;
+  pointer-events:  none;
+  max-width:  320px;
+  padding: 8px 10px;
+  background: white;
+  border:  1px solid #131212;
+  border-radius: 6px;
+  font-size: 13px;
+  text-align: right;
+}
+.tooltip span{display: block;}

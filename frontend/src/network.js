@@ -13,8 +13,8 @@ export function drawNetwork(svgElement, data, options = {}) {
     const height = svgElement.clientHeight;
     svg.attr("viewBox", [0, 0, width, height]);
 
-    const links = data.links.map(d => ({...d, id: String(d.id)}));
-    const nodes = data.node.map(d => ({...d, source: String(d.source), target: String(d.target)}));
+    const links = data.links.map(d => ({...d, source: String(d.source), target: String(d.target)}));
+    const nodes = data.nodes.map(d => ({...d, id: String(d.id)}));
 
     const simulation = d3.forceSimulation(nodes)
       .force("link", d3.forceLink(links).id(d => d.id))
@@ -53,7 +53,7 @@ export function drawNetwork(svgElement, data, options = {}) {
             .attr("cy", d => d.y);
     }
     
-    node.call(d3.drag())
+    node.call(d3.drag()
         .on("start", (event, d) => {
             if (!event.active) simulation.alphaTarget(0.3).restart();
             d.fx = d.x;
@@ -67,7 +67,7 @@ export function drawNetwork(svgElement, data, options = {}) {
             if (!event.active) simulation.alphaTarget(0);
             d.fx = null;
             d.fy = null;
-        });
+        }));
 
     function centerFit(){
         const [x0,x1] = d3.extent(nodes, d => d.x);
@@ -76,11 +76,13 @@ export function drawNetwork(svgElement, data, options = {}) {
         const dy = Math.max(1, y1 - y0);
 
         const pad = {top: 20, right: 20, bottom: 20, left: 20}
+        const availableWidth = Math.max(1, width - pad.left - pad.right);
+        const availableHeight = Math.max(1, height - pad.top - pad.bottom);
         const k = Math.min(availableWidth / dx, availableHeight / dy, 4);
         return {k, tx: pad.left + availableWidth /2 - k * (x0 + x1) / 2, ty: pad.top + availableHeight / 2 - k * (y0 + y1) / 2};
     }
 
-    function ZoomToFit(duration = 600){
+    function fitToView(duration = 600){
         if( nodes.length === 0 ) return;
         const {k, tx, ty} = centerFit();
         svg.transition().duration(duration).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(k));
@@ -96,7 +98,7 @@ export function drawNetwork(svgElement, data, options = {}) {
             const {k} = centerFit();
             node.attr("r", Math.min(10, Math.max(1.5, 5 * k)));
         }
-        zoomToFit();
+        fitToView();
         onSettled();
     });
 
@@ -109,14 +111,14 @@ export function drawNetwork(svgElement, data, options = {}) {
     if (tooltip) {
         node.on("mouseover", (event, d) => {
             renderTooltip(tooltip, d);
-            tooltip.style("display", "block");
+            tooltip.style.display = "block";
         })
         .on("mousemove", (event) => {
-            tooltip.style.left = '${event.pageX + 10}px';
-            tooltip.style.top = '${event.pageY + 10}px';
+            tooltip.style.left = `${event.clientX + 10}px`;
+            tooltip.style.top = `${event.clientY + 10}px`;
         })
         .on("mouseout", () => {
-            tooltip.style("display", "none");
+            tooltip.style.display = "none";
         });
     }
 
@@ -131,14 +133,14 @@ export function drawNetwork(svgElement, data, options = {}) {
         tooltip.append(heading);
 
         const metadata = [
-            d.publication_year ? 'Year : ${d.publication_year}' : "",
-            d.venue ? 'Venue: ${truncate(d.venue,70)}' : "",
-            d.authors ? 'Authors: ${truncate(d.authors, 90)}' : "",
+            d.publication_year ? `Year: ${d.publication_year}` : "",
+            d.venue ? `Venue: ${truncateText(d.venue, 70)}` : "",
+            d.authors ? `Authors: ${truncateText(d.authors, 90)}` : "",
         ].filter(Boolean);
 
         for(const line of metadata){
             const row = document.createElement("span");
-            row.textContent = metadata;
+            row.textContent = line;
             tooltip.append(row);
         }
     }
